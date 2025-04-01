@@ -1,9 +1,9 @@
 class Grafo:
     def __init__(self):
-        self.nos = {}  # Dicionário de nós
-        self.arestas = []  # Lista de arestas
-        self.arcos = []  # Lista de arcos
-        self.requeridos = {"nos": [], "arestas": [], "arcos": []}  # Elementos requeridos
+        self.nos = {}
+        self.arestas = []
+        self.arcos = []
+        self.requeridos = {"nos": [], "arestas": [], "arcos": []}
 
     def adicionar_no(self, no):
         if no not in self.nos:

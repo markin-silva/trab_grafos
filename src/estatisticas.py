@@ -46,8 +46,8 @@ def intermediacao(grafo, caminhos_completos):
     intermediacao = {no: 0 for no in grafo.nos}
     for origem, destinos in caminhos_completos.items():
         for destino, caminho in destinos.items():
-            if origem != destino and caminho:  # Garante que o caminho não seja None ou vazio
-                for no in caminho[1:-1]:  # Ignora o primeiro e o último nó
+            if origem != destino and caminho: 
+                for no in caminho[1:-1]: 
                     intermediacao[no] += 1
     return intermediacao
 
@@ -74,7 +74,6 @@ def floyd_warshall(grafo):
     matriz_caminhos = {no: {dest: float('inf') for dest in nos} for no in nos}
     matriz_predecessores = {no: {dest: None for dest in nos} for no in nos}
 
-    # Inicializa os custos e predecessores para arestas e arcos
     for no in nos:
         matriz_caminhos[no][no] = 0
 
@@ -88,7 +87,6 @@ def floyd_warshall(grafo):
         matriz_caminhos[arco["de"]][arco["para"]] = arco["custo"]
         matriz_predecessores[arco["de"]][arco["para"]] = arco["de"]
 
-    # Floyd-Warshall para caminhos mais curtos
     for k in nos:
         for i in nos:
             for j in nos:
@@ -97,7 +95,6 @@ def floyd_warshall(grafo):
                     matriz_caminhos[i][j] = novo_caminho
                     matriz_predecessores[i][j] = matriz_predecessores[k][j]
 
-    # Reconstrução dos caminhos completos
     caminhos_completos = {no: {dest: [] for dest in nos} for no in nos}
     for origem in nos:
         for destino in nos:
