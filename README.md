@@ -19,24 +19,12 @@ Antes de rodar o projeto, você precisa ter o seguinte instalado na sua máquina
    git clone https://github.com/usuario/projeto-logistica.git
    cd projeto-logistica
    ```
-2. Crie e ative um ambiente virtual:
-   - No Windows:
-     ```bash
-     python -m venv venv
-     venv\Scripts\activate
-     ```
-   - No macOS/Linux
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
-3. Instale as dependências: Com o ambiente virtual ativado, instale as dependências necessárias:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Abra o arquivo visualizacao.ipynb em seu Jupyter/VSCode e execute célula a célula.
+   -  Ele fará ler_arquivo("../data/mggdb_0.25_4.dat") (ou outro .dat se você desejar).
+   -  Em seguida, imprime as estatísticas calculadas
 
-4. Inicie o Jupyter Notebook: Para rodar o código interativamente, inicie o Jupyter Notebook com o comando:
-   ```bash
-   jupyter notebook
-   ```
+### Autores
+
+- Marcus Vinícius Alves Silva
+- Ayron Sanfra Silva Marinho
