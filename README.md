@@ -23,7 +23,7 @@ Antes de rodar o projeto, você precisa ter o seguinte instalado na sua máquina
    - No Windows:
      ```bash
      python -m venv venv
-     .\venv\Scripts\activate
+     venv\Scripts\activate
      ```
    - No macOS/Linux
      ```bash

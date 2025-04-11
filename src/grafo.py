@@ -1,9 +1,18 @@
 class Grafo:
     def __init__(self):
+        # Armazenamos informações em:
+        # - self.nos: dicionário { nome_no: {"grau": ...} }
+        # - self.arestas: lista de dicionários {"de", "para", "custo"}
+        # - self.arcos: lista de dicionários {"de", "para", "custo"}
+        # - self.requeridos: dicionário com chaves "nos", "arestas", "arcos" para armazenar as entidades obrigatórias
         self.nos = {}
         self.arestas = []
         self.arcos = []
-        self.requeridos = {"nos": [], "arestas": [], "arcos": []}
+        self.requeridos = {
+            "nos": [],
+            "arestas": [],
+            "arcos": []
+        }
 
     def adicionar_no(self, no):
         if no not in self.nos:
@@ -31,9 +40,3 @@ class Grafo:
 
     def adicionar_requerido(self, tipo, item):
         self.requeridos[tipo].append(item)
-
-    def mostrar_info(self):
-        print("Nós:", self.nos)
-        print("Arestas:", self.arestas)
-        print("Arcos:", self.arcos)
-        print("Requeridos:", self.requeridos)
