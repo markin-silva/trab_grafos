@@ -20,9 +20,16 @@ Antes de rodar o projeto, você precisa ter o seguinte instalado na sua máquina
    cd projeto-logistica
    ```
 
-2. Abra o arquivo visualizacao.ipynb em seu Jupyter/VSCode e execute célula a célula.
-   -  Ele fará ler_arquivo("../data/mggdb_0.25_4.dat") (ou outro .dat se você desejar).
-   -  Em seguida, imprime as estatísticas calculadas
+2. **Instale as dependências**:
+   Se o projeto tiver um arquivo `requirements.txt`, você pode instalar as dependências com:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Execute o projeto**:
+   Abra o arquivo `visualizacao.ipynb` em seu Jupyter ou VSCode e execute célula a célula.
+   - Ele carregará os dados a partir do arquivo `../data/mggdb_0.25_4.dat` (ou outro `.dat`, caso você deseje).
+   - Em seguida, imprimirá as estatísticas calculadas.
 
 ### Autores
 
