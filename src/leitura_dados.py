@@ -1,11 +1,12 @@
 from grafo import Grafo
 
 def ler_arquivo(filepath):
-    
     grafo = Grafo()
     tipo = None
-    capacidade_veiculo = None  # Inicializa como indefinido
+    capacidade_veiculo = None
+    id_servico = 1  # ID global de serviço
 
+    # Mapeamento para as seções do arquivo
     prefix_map = {
         "ReN.": "nos",
         "ReE.": "arestas",
@@ -14,65 +15,73 @@ def ler_arquivo(filepath):
         "ARC":  "arcos_nao_requeridos"
     }
 
-    with open(filepath, 'r') as arquivo:
-        linhas = arquivo.readlines()
+    try:
+        with open(filepath, 'r') as arquivo:
+            linhas = arquivo.readlines()
 
-    for linha in linhas:
-        linha = linha.strip()
+        for linha in linhas:
+            linha = linha.strip()
 
-        if not linha or linha.startswith("#"):
-            continue
+            if not linha or linha.startswith("#"):
+                continue  # Ignora linhas em branco ou de comentário
 
-        # Captura a capacidade do veículo dinamicamente
-        if linha.startswith("Capacity:"):
-            try:
-                capacidade_veiculo = int(linha.split()[1])  # Extração segura
-            except ValueError:
-                capacidade_veiculo = None
-            continue
+            # Captura a capacidade do veículo
+            if linha.startswith("Capacity:"):
+                capacidade_veiculo = int(linha.split()[1])
+                continue
 
-        novo_tipo = next((v for k, v in prefix_map.items() if linha.startswith(k)), None)
-        if novo_tipo is not None:
-            tipo = novo_tipo
-            continue
+            # Verifica o tipo de dado (nos, arestas, arcos) na linha
+            if any(linha.startswith(k) for k in prefix_map.keys()):
+                tipo = next(v for k, v in prefix_map.items() if linha.startswith(k))
+                continue
 
-        dados = linha.split()
+            dados = linha.split()
 
-        if tipo == "nos" and len(dados) >= 3:
-            no_id = dados[0].replace("N", "")
-            grafo.adicionar_no(no_id)
-            grafo.adicionar_requerido("nos", {
-                "id": no_id,
-                "inicio": no_id,
-                "fim": no_id,
-                "demanda": int(dados[1]),
-                "custo": int(dados[2])
-            })
+            # Leitura de dados de nós (ReN.)
+            if tipo == "nos" and len(dados) == 3:
+                no_id = dados[0].replace("N", "")  # Remove o prefixo "N" do nó
+                grafo.adicionar_no(no_id)
+                grafo.adicionar_requerido("nos", {
+                    "id": no_id,
+                    "inicio": no_id,
+                    "fim": no_id,
+                    "demanda": int(dados[1]),
+                    "custo": int(dados[2])
+                })
+                id_servico += 1
 
-        elif tipo == "arestas" and len(dados) >= 6:
-            aresta_id = dados[0].replace("E", "")
-            grafo.adicionar_aresta(dados[1], dados[2], int(dados[3]))
-            grafo.adicionar_requerido("arestas", {
-                "id": aresta_id,
-                "inicio": dados[1],
-                "fim": dados[2],
-                "demanda": int(dados[4]),
-                "custo": int(dados[5])
-            })
+            # Leitura de dados de arestas (ReE.)
+            elif tipo == "arestas" and len(dados) == 6:
+                grafo.adicionar_aresta(dados[1], dados[2], int(dados[3]))
+                grafo.adicionar_requerido("arestas", {
+                    "id": id_servico,
+                    "inicio": dados[1],
+                    "fim": dados[2],
+                    "demanda": int(dados[4]),
+                    "custo": int(dados[5])
+                })
+                id_servico += 1
 
-        elif tipo == "arcos" and len(dados) >= 6:
-            arco_id = dados[0].replace("A", "")
-            grafo.adicionar_arco(dados[1], dados[2], int(dados[3]))
-            grafo.adicionar_requerido("arcos", {
-                "id": arco_id,
-                "inicio": dados[1],
-                "fim": dados[2],
-                "demanda": int(dados[4]),
-                "custo": int(dados[5])
-            })
+            # Leitura de dados de arcos (ReA.)
+            elif tipo == "arcos" and len(dados) == 6:
+                grafo.adicionar_arco(dados[1], dados[2], int(dados[3]))
+                grafo.adicionar_requerido("arcos", {
+                    "id": id_servico,
+                    "inicio": dados[1],
+                    "fim": dados[2],
+                    "demanda": int(dados[4]),
+                    "custo": int(dados[5])
+                })
+                id_servico += 1
 
-    # Verificação final da capacidade do veículo
-    if capacidade_veiculo is None:
-        capacidade_veiculo = 10  # Define um valor padrão se não for encontrado
+            # Processando dados de arcos não requeridos (ARC)
+            elif tipo == "arcos_nao_requeridos" and len(dados) == 3:
+                # Nesse caso, estamos apenas adicionando os arcos ao grafo
+                grafo.adicionar_arco(dados[1], dados[2], int(dados[3]))
 
-    return grafo, capacidade_veiculo  # Retorna também a capacidade lida
+    except FileNotFoundError:
+        print(f"Erro: O arquivo {filepath} não foi encontrado.")
+    except Exception as e:
+        print(f"Erro ao ler o arquivo: {e}")
+
+    return grafo, capacidade_veiculo
