@@ -1,87 +1,104 @@
 from grafo import Grafo
 
-def ler_arquivo(filepath):
+def ler_arquivo(caminho_arquivo):
     grafo = Grafo()
-    tipo = None
-    capacidade_veiculo = None
-    id_servico = 1  # ID global de serviço
+    secao = None
 
-    # Mapeamento para as seções do arquivo
-    prefix_map = {
-        "ReN.": "nos",
-        "ReE.": "arestas",
-        "ReA.": "arcos",
-        "EDGE": "arestas_nao_requeridas",
-        "ARC":  "arcos_nao_requeridos"
-    }
+    with open(caminho_arquivo, 'r') as arquivo:
+        for linha in arquivo:
+            try:
+                linha = linha.strip()
+                if not linha or linha.startswith('#') or linha.startswith('the data'):
+                    continue
 
-    try:
-        with open(filepath, 'r') as arquivo:
-            linhas = arquivo.readlines()
+                if 'Depot Node:' in linha:
+                    deposito = int(linha.split(':')[1].strip())
+                    grafo.deposito = deposito
+                    continue
 
-        for linha in linhas:
-            linha = linha.strip()
+                if 'Capacity:' in linha:
+                    capacidade = int(linha.split(':')[1].strip())
+                    grafo.capacidade = capacidade
+                    continue
 
-            if not linha or linha.startswith("#"):
-                continue  # Ignora linhas em branco ou de comentário
+                # Identifica se mudou a seção
+                if linha.startswith('ReN.'):
+                    secao = 'nos_requeridos'
+                    continue
+                elif linha.startswith('ReE.'):
+                    secao = 'arestas_requeridas'
+                    continue
+                elif linha.startswith('EDGE'):
+                    secao = 'arestas_nao_requeridas'
+                    continue
+                elif linha.startswith('ReA.'):
+                    secao = 'arcos_requeridos'
+                    continue
+                elif linha.startswith('ARC'):
+                    secao = 'arcos_nao_requeridos'
+                    continue
 
-            # Captura a capacidade do veículo
-            if linha.startswith("Capacity:"):
-                capacidade_veiculo = int(linha.split()[1])
+                # Processa linhas conforme a seção
+                if secao == 'nos_requeridos':
+                    partes = linha.split()
+                    if len(partes) >= 3:
+                        id_no = int(partes[0][1:])  # Remove o 'N'
+                        demanda = int(partes[1])
+                        custo_servico = int(partes[2])
+                        grafo.adiciona_no(id_no, requerido=True, demanda=demanda, custo_servico=custo_servico)
+
+                elif secao == 'arestas_requeridas':
+                    partes = linha.split()
+                    if len(partes) >= 6:
+                        origem = int(partes[1])
+                        destino = int(partes[2])
+                        custo_viagem = int(partes[3])
+                        demanda = int(partes[4])
+                        custo_servico = int(partes[5])
+                        # Arestas bidirecionais requeridas (vai e volta)
+                        grafo.adiciona_aresta(origem, destino, custo_viagem, demanda, custo_servico, requerido=True, direcionado=False)
+                        grafo.adiciona_aresta(destino, origem, custo_viagem, demanda, custo_servico, requerido=True, direcionado=False)
+                        # Garante que os nós existam
+                        grafo.adiciona_no(origem)
+                        grafo.adiciona_no(destino)
+
+                elif secao == 'arestas_nao_requeridas':
+                    partes = linha.split()
+                    if len(partes) >= 4:
+                        origem = int(partes[1])
+                        destino = int(partes[2])
+                        custo_viagem = int(partes[3])
+                        # Arestas bidirecionais não requeridas
+                        grafo.adiciona_aresta(origem, destino, custo_viagem, requerido=False, direcionado=False)
+                        grafo.adiciona_aresta(destino, origem, custo_viagem, requerido=False, direcionado=False)
+                        grafo.adiciona_no(origem)
+                        grafo.adiciona_no(destino)
+
+                elif secao == 'arcos_requeridos':
+                    partes = linha.split()
+                    if len(partes) >= 6:
+                        origem = int(partes[1])
+                        destino = int(partes[2])
+                        custo_viagem = int(partes[3])
+                        demanda = int(partes[4])
+                        custo_servico = int(partes[5])
+                        # Arcos direcionados requeridos
+                        grafo.adiciona_aresta(origem, destino, custo_viagem, demanda, custo_servico, requerido=True, direcionado=True)
+                        grafo.adiciona_no(origem)
+                        grafo.adiciona_no(destino)
+
+                elif secao == 'arcos_nao_requeridos':
+                    partes = linha.split()
+                    if len(partes) >= 4:
+                        origem = int(partes[1])
+                        destino = int(partes[2])
+                        custo_viagem = int(partes[3])
+                        # Arcos direcionados não requeridos
+                        grafo.adiciona_aresta(origem, destino, custo_viagem, requerido=False, direcionado=True)
+                        grafo.adiciona_no(origem)
+                        grafo.adiciona_no(destino)
+            except ValueError as e:
+                print(f"Erro ao processar linha: {linha}. Erro: {e}")
                 continue
 
-            # Verifica o tipo de dado (nos, arestas, arcos) na linha
-            if any(linha.startswith(k) for k in prefix_map.keys()):
-                tipo = next(v for k, v in prefix_map.items() if linha.startswith(k))
-                continue
-
-            dados = linha.split()
-
-            # Leitura de dados de nós (ReN.)
-            if tipo == "nos" and len(dados) == 3:
-                no_id = dados[0].replace("N", "")  # Remove o prefixo "N" do nó
-                grafo.adicionar_no(no_id)
-                grafo.adicionar_requerido("nos", {
-                    "id": no_id,
-                    "inicio": no_id,
-                    "fim": no_id,
-                    "demanda": int(dados[1]),
-                    "custo": int(dados[2])
-                })
-                id_servico += 1
-
-            # Leitura de dados de arestas (ReE.)
-            elif tipo == "arestas" and len(dados) == 6:
-                grafo.adicionar_aresta(dados[1], dados[2], int(dados[3]))
-                grafo.adicionar_requerido("arestas", {
-                    "id": id_servico,
-                    "inicio": dados[1],
-                    "fim": dados[2],
-                    "demanda": int(dados[4]),
-                    "custo": int(dados[5])
-                })
-                id_servico += 1
-
-            # Leitura de dados de arcos (ReA.)
-            elif tipo == "arcos" and len(dados) == 6:
-                grafo.adicionar_arco(dados[1], dados[2], int(dados[3]))
-                grafo.adicionar_requerido("arcos", {
-                    "id": id_servico,
-                    "inicio": dados[1],
-                    "fim": dados[2],
-                    "demanda": int(dados[4]),
-                    "custo": int(dados[5])
-                })
-                id_servico += 1
-
-            # Processando dados de arcos não requeridos (ARC)
-            elif tipo == "arcos_nao_requeridos" and len(dados) == 3:
-                # Nesse caso, estamos apenas adicionando os arcos ao grafo
-                grafo.adicionar_arco(dados[1], dados[2], int(dados[3]))
-
-    except FileNotFoundError:
-        print(f"Erro: O arquivo {filepath} não foi encontrado.")
-    except Exception as e:
-        print(f"Erro ao ler o arquivo: {e}")
-
-    return grafo, capacidade_veiculo
+    return grafo
