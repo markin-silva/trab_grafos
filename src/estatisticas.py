@@ -2,28 +2,32 @@ def quantidade_vertices(grafo):
     return len(grafo.nos)
 
 def quantidade_arestas(grafo):
-    return len(grafo.arestas)
+    return sum(1 for aresta in grafo.arestas if not aresta.direcionado)  # Apenas arestas bidirecionais
 
 def quantidade_arcos(grafo):
-    return len(grafo.arcos)
+    return sum(1 for aresta in grafo.arestas if aresta.direcionado)  # Apenas arcos direcionados
 
 def quantidade_vertices_requeridos(grafo):
-    return len(grafo.requeridos["nos"])
+    return sum(1 for no in grafo.nos.values() if no.requerido)
 
 def quantidade_arestas_requeridas(grafo):
-    return len(grafo.requeridos["arestas"])
+    return sum(1 for aresta in grafo.arestas if aresta.requerido and not aresta.direcionado)
 
 def quantidade_arcos_requeridos(grafo):
-    return len(grafo.requeridos["arcos"])
+    return sum(1 for aresta in grafo.arestas if aresta.requerido and aresta.direcionado)
 
 def densidade(grafo):
     n = len(grafo.nos)
-    m = len(grafo.arestas) + len(grafo.arcos)
+    m = len(grafo.arestas)
     return m / (n * (n - 1)) if n > 1 else 0
 
 def grau_min_max(grafo):
-    graus = [info["grau"] for info in grafo.nos.values()]
-    return min(graus), max(graus)
+    graus = {no_id: 0 for no_id in grafo.nos}
+    for aresta in grafo.arestas:
+        graus[aresta.origem] += 1
+        graus[aresta.destino] += 1
+    
+    return min(graus.values()), max(graus.values())
 
 def componentes_conectados(grafo):
     visitados = set()
@@ -31,9 +35,11 @@ def componentes_conectados(grafo):
 
     def dfs(no):
         visitados.add(no)
-        for vizinho in grafo.nos:
-            if vizinho not in visitados:
-                dfs(vizinho)
+        for aresta in grafo.arestas:
+            if aresta.origem == no and aresta.destino not in visitados:
+                dfs(aresta.destino)
+            if aresta.destino == no and aresta.origem not in visitados:
+                dfs(aresta.origem)
     
     for no in grafo.nos:
         if no not in visitados:
@@ -62,12 +68,12 @@ def caminho_medio(matriz_caminhos):
     return soma_caminhos / total_caminhos if total_caminhos > 0 else 0
 
 def diametro(matriz_caminhos):
-    maior_caminho = 0
-    for origem in matriz_caminhos:
-        for destino in matriz_caminhos[origem]:
-            if matriz_caminhos[origem][destino] != float('inf'):
-                maior_caminho = max(maior_caminho, matriz_caminhos[origem][destino])
-    return maior_caminho
+    return max(
+        matriz_caminhos[origem][destino] 
+        for origem in matriz_caminhos 
+        for destino in matriz_caminhos[origem] 
+        if matriz_caminhos[origem][destino] != float('inf')
+    )
 
 def floyd_warshall(grafo):
     nos = list(grafo.nos.keys())
@@ -78,14 +84,11 @@ def floyd_warshall(grafo):
         matriz_caminhos[no][no] = 0
 
     for aresta in grafo.arestas:
-        matriz_caminhos[aresta["de"]][aresta["para"]] = aresta["custo"]
-        matriz_caminhos[aresta["para"]][aresta["de"]] = aresta["custo"]
-        matriz_predecessores[aresta["de"]][aresta["para"]] = aresta["de"]
-        matriz_predecessores[aresta["para"]][aresta["de"]] = aresta["para"]
-
-    for arco in grafo.arcos:
-        matriz_caminhos[arco["de"]][arco["para"]] = arco["custo"]
-        matriz_predecessores[arco["de"]][arco["para"]] = arco["de"]
+        matriz_caminhos[aresta.origem][aresta.destino] = aresta.custo_viagem
+        matriz_predecessores[aresta.origem][aresta.destino] = aresta.origem
+        if not aresta.direcionado:  # Se for bidirecional
+            matriz_caminhos[aresta.destino][aresta.origem] = aresta.custo_viagem
+            matriz_predecessores[aresta.destino][aresta.origem] = aresta.destino
 
     for k in nos:
         for i in nos:
