@@ -18,19 +18,18 @@ def heuristica_construtiva_otimizada(grafo):
 
     # --- ESTRATÉGIA HÍBRIDA INTELIGENTE ---
     if num_nos < LIMIAR_DE_NOS_PARA_DIJKSTRA:
-        # Para grafos pequenos, a simplicidade do Floyd-Warshall é mais rápida.
+        # Para grafos pequenos, utiliza Floyd-Warshall.
         print(f"Grafo pequeno ({num_nos} nós). Usando Floyd-Warshall.")
         distancias, mapa_indices = floyd_warshall(grafo)
     else:
-        # Para grafos maiores, a eficiência do Dijkstra é essencial.
-        servicos_temp = criar_servicos(grafo) # Precisamos dos serviços para achar os nós relevantes
+        # Para grafos maiores, utiliza Dkistra
+        servicos_temp = criar_servicos(grafo)
         nos_finais_de_servico = {s['destino'] for s in servicos_temp}
         nos_origem_relevantes = list(nos_finais_de_servico | {grafo.deposito})
         
         print(f"Grafo grande ({num_nos} nós). Usando Dijkstra em {len(nos_origem_relevantes)} nós relevantes.")
         distancias, mapa_indices = calcular_distancias_necessarias_dijkstra(grafo, nos_origem_relevantes)
 
-    # O resto do algoritmo continua exatamente igual
     servicos = criar_servicos(grafo)
     clusters = clusterizacao_gulosa_demanda_proximidade(servicos, distancias, mapa_indices, grafo.capacidade)
 
