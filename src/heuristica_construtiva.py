@@ -178,6 +178,6 @@ def heuristica_construtiva(grafo):
         custo_total += custo_rota
 
     fim_tempo = time.time()
-    tempo_execucao = int((fim_tempo - inicio_tempo)*1e6)  # microssegundos
+    tempo_execucao_original = int((fim_tempo - inicio_tempo)*1e6)  # microssegundos
 
-    return custo_total, rotas, tempo_execucao
+    return custo_total, rotas, tempo_execucao_original
